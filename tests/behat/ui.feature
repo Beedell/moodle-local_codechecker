@@ -4,49 +4,73 @@ Feature: Codechecker UI works as expected
   As an admin
   I need to be able to use codechecker UI with success
 
-  Scenario Outline: Verify that specified paths are checked
+  Scenario: Verify that specified paths are checked
     Given I log in as "admin"
     And I navigate to "Development > Code checker" in site administration
-    And I set the field "Path to check" to "<path>"
+
+    When I set the field "Path to check" to "index.php"
+    And I press "Check code"
+    Then I should see "Files found: 1"
+    And I should not see "Invalid path"
+
+    When I set the field "Path to check" to "index2.php"
+    And I press "Check code"
+    Then I should see "Invalid path index2.php"
+    And I should not see "Files found: 1"
+
+    When I set the field "Path to check" to "local/codechecker/version.php"
     And I set the field "Exclude" to "*/tests/fixtures/*"
-    When I press "Check code"
-    Then I should see "<seen>"
-    And I should not see "<notseen>"
-    And I log out
+    And I press "Check code"
+    Then I should see "Well done!"
+    And I should not see "Invalid path"
 
-    Examples:
-      | path                                    | seen                           | notseen        |
-      | index.php                               | Files found: 1                 | Invalid path   |
-      | index2.php                              | Invalid path index2.php        | Files found: 1 |
-      | local/codechecker/version.php           | Well done!                     | Invalid path   |
-      | local/codechecker/moodle/tests/fixtures | Files found: 0                 | Invalid path   |
-      | local/codechecker/tests/                | local_codechecker_testcase.php | Invalid path   |
-      | local/codechecker/tests/                | Files found: 1                 | Invalid path   |
-      | local/codechecker/tests/                | Well done!                     | Invalid path   |
-      | admin/index.php                         | Files found: 1                 | Invalid path   |
-      | admin/index.php                         | Total:                         | Well done!     |
-      | admin/index.php                         | Expected 1 space before        | Well done!     |
-      | admin/index.php                         | Inline comments must start     | Well done!     |
+    When I set the field "Path to check" to "local/codechecker/moodle/tests/fixtures"
+    And I set the field "Exclude" to "*/tests/fixtures/*"
+    And I press "Check code"
+    Then I should see "Files found: 0"
+    And I should not see "Invalid path"
 
-  Scenario Outline: Verify that specified exclusions are performed
+    When I set the field "Path to check" to "local/codechecker/tests/"
+    And I set the field "Exclude" to "*/tests/fixtures/*"
+    And I press "Check code"
+    Then I should see "local_codechecker_testcase.php"
+    And I should see "Files found: 1"
+    And I should see "Well done!"
+    And I should not see "Invalid path"
+
+    When I set the field "Path to check" to "admin/index.php"
+    And I press "Check code"
+    Then I should see "Files found: 1"
+    And I should see "Total:"
+    And I should see "Expected 1 space before"
+    And I should see "Inline comments must start"
+    And I should not see "Well done!"
+
+  Scenario: Verify that specified exclusions are performed
     Given I log in as "admin"
     And I navigate to "Development > Code checker" in site administration
-    And I set the field "Path to check" to "<path>"
-    And I set the field "Exclude" to "<exclude>"
-    When I press "Check code"
-    Then I should see "<seen>"
-    And I should not see "<notseen>"
-    And I log out
 
-    Examples:
-      | path                            | exclude            | seen                          | notseen      |
-      | local/codechecker/moodle/tests  | */tests/fixtures/* | Files found: 1                | Invalid path |
-      | local/codechecker/moodle/tests  | */tests/fixtures/* | moodlestandard_test.php       | Invalid path |
-      | local/codechecker/moodle/tests/ | *PHPC*, *moodle_*  | Files found: 5                | Invalid path |
-      | local/codechecker/moodle/tests/ | *PHPC*, *moodle_*  | Line 1 of the opening comment | moodle_php   |
-      | local/codechecker/moodle/tests/ | *PHPC*, *moodle_*  | Inline comments must end      | /phpcompat   |
-      | local/codechecker/moodle/tests/ | *PHPC*, *moodle_*  | Inline comments must end      | /phpcompat   |
-      | local/codechecker/moodle/tests/ | *moodle_*          | fixtures/phpcompat            | /moodle_php  |
+    When I set the field "Path to check" to "local/codechecker/moodle/tests"
+    And I set the field "Exclude" to "*/tests/fixtures/*"
+    And I press "Check code"
+    Then I should see "Files found: 1"
+    And I should see "moodlestandard_test.php"
+    And I should not see "Invalid path"
+
+    When I set the field "Path to check" to "local/codechecker/moodle/tests/"
+    And I set the field "Exclude" to "*PHPC*, *moodle_*"
+    And I press "Check code"
+    Then I should see "Files found: 5"
+    And I should see "Line 1 of the opening comment"
+    And I should see "Inline comments must end"
+    And I should not see "phpcompat"
+
+    When I set the field "Path to check" to "local/codechecker/moodle/tests/"
+    And I set the field "Exclude" to "*moodle_*"
+    And I press "Check code"
+    Then I should see "Files found: 7"
+    And I should see "phpcompat"
+    And I should not see "moodle_php"
 
   # We use the @javascript tag here because of MDL-53083, causing non-javascript to fail unchecking checkboxes
   @javascript
